@@ -8,18 +8,17 @@
 class Philosopher
 {
 private:
-    std::string name_;
-    mutable std::mutex coutMutex_;
-    using Lock = std::lock_guard<std::mutex>;
+    int id_;
     Fork& leftFork_;
     Fork& rightFork_;
 
-
-public:
-    Philosopher(const std::string& name, Fork& leftFork, Fork& rightFork);
-    ~Philosopher() = default;
-
     void eat() const;
     void think() const;
-    std::string getName() const;
+    void print(const std::string &what) const;
+
+public:
+    Philosopher(int id, Fork& leftFork, Fork& rightFork);
+    Philosopher(Philosopher&& other);
+    
+    void dine(bool& isAlive);
 };

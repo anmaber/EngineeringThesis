@@ -2,28 +2,47 @@
 #include "philosopher.hpp"
 #include <thread>
 
+std::mutex coutMutex;
+
 void Philosopher::eat() const
 {
     std::scoped_lock lockForks(leftFork_.forkMutex_,rightFork_.forkMutex_);
-    std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() % 3000));
-    Lock l(coutMutex_);
-    std::cout << getName() << "is eating";
+    print("started eating");
+    std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() % 50+50));
+    print("stopped eating");
 }
 
 void Philosopher::think() const
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() % 3000));
-    Lock l(coutMutex_);
-    std::cout << getName() << "is thinking";
+    print("started thinking");
+    std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() % 100+50));
+    print("stopped thinking");
 }
 
-std::string Philosopher::getName() const
-{
-    return name_;
-}
-
-Philosopher::Philosopher(const std::string& name, Fork& leftFork, Fork& rightFork) :
-    name_(name),
+Philosopher::Philosopher(int id, Fork& leftFork, Fork& rightFork) :
+    id_(id),
     leftFork_(leftFork),
     rightFork_(rightFork)
+{}
+
+void Philosopher::dine(bool& isAlive)
+{
+    while(!isAlive);
+    while(isAlive)
+    {
+        think();
+        eat();
+    }
+}
+
+void Philosopher::print(const std::string& what) const
+{
+    std::lock_guard<std::mutex> lock(coutMutex);
+    std::cout<< id_<<"\t"<<what<<"\n";
+}
+
+Philosopher::Philosopher(Philosopher&& other) :
+    id_(other.id_),
+    leftFork_(other.leftFork_),
+    rightFork_(other.rightFork_)
 {}
