@@ -12,7 +12,7 @@ int main()
     std::vector<Philosopher> philosophers;
     std::vector<std::thread> philosophersThreads;
 
-    bool arePhilosophersAlive = false;
+    bool feastHasPlace = false;
 
     for(int i = 0; i < numOfPhilosophers-1; ++i)
     {
@@ -22,14 +22,14 @@ int main()
 
     for(int i = 0; i < numOfPhilosophers; ++i)
     {
-        philosophersThreads.emplace_back(std::thread(&Philosopher::dine, &philosophers.at(i), std::ref(arePhilosophersAlive)));
+        philosophersThreads.emplace_back(std::thread(&Philosopher::dine, &philosophers.at(i), std::ref(feastHasPlace)));
     }
 
-    arePhilosophersAlive = true;
+    feastHasPlace = true;
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(120));
 
-    arePhilosophersAlive = false;
+    feastHasPlace = false;
 
     for(auto &&philosopherThread : philosophersThreads)
     {

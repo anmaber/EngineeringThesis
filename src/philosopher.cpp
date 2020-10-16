@@ -4,34 +4,55 @@
 
 std::mutex coutMutex;
 
-void Philosopher::eat() const
+void Philosopher::eat()
 {
-    std::scoped_lock lockForks(leftFork_.forkMutex_,rightFork_.forkMutex_);
-    print("started eating");
-    std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() % 50+50));
-    print("stopped eating");
+    if(!isFull())
+    {
+        std::scoped_lock lockForks(leftFork_.forkMutex_,rightFork_.forkMutex_);
+        print("started eating");
+        std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() % 2000));
+        print("stopped eating");
+        lastMeal_ = std::chrono::steady_clock::now();
+        isHungry_ = false;
+    }
 }
 
-void Philosopher::think() const
+void Philosopher::think()
 {
-    print("started thinking");
-    std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() % 100+50));
-    print("stopped thinking");
+    if(!isHungry_)
+    {
+        print("started thinking");
+        std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() % 2000));
+        print("stopped thinking");
+        isHungry_ = true;
+    }
+
 }
 
 Philosopher::Philosopher(int id, Fork& leftFork, Fork& rightFork) :
     id_(id),
     leftFork_(leftFork),
     rightFork_(rightFork)
-{}
-
-void Philosopher::dine(bool& isAlive)
 {
-    while(!isAlive);
-    while(isAlive)
+    lastMeal_ = std::chrono::steady_clock::now();
+}
+
+void Philosopher::dine(bool& feastHasPlace)
+{
+    while(!feastHasPlace);
+    lastMeal_ = std::chrono::steady_clock::now();
+    while(feastHasPlace)
     {
-        think();
-        eat();
+        if(isAlive())
+        {
+            think();
+            eat();
+        }
+        else
+        {
+            print("DIED");
+            return;
+        }        
     }
 }
 
@@ -46,3 +67,17 @@ Philosopher::Philosopher(Philosopher&& other) :
     leftFork_(other.leftFork_),
     rightFork_(other.rightFork_)
 {}
+
+bool Philosopher::isFull() const
+{
+    auto now = std::chrono::steady_clock::now();
+    auto timeSinceLastEating = std::chrono::duration_cast<std::chrono::seconds>(now - lastMeal_).count();
+    return timeSinceLastEating < timeToRestAfterEating;
+}
+
+bool Philosopher::isAlive() const
+{
+    auto now = std::chrono::steady_clock::now();
+    auto timeSinceLastEating = std::chrono::duration_cast<std::chrono::seconds>(now - lastMeal_).count();
+    return timeSinceLastEating < lifetimeWithoutEating;
+}
