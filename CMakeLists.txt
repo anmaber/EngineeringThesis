@@ -36,17 +36,25 @@ endif()
 # Now simply link against gtest or gtest_main as needed. Eg
 
 project(enineeringThesis)
+
+find_package (Threads)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
+
 set (SRC_LIST
     src/philosopher.cpp
+    src/conclusion.cpp
+    src/book.cpp
     src/main.cpp)
+    
 include_directories(src)
 include_directories(inc)
 add_library(${PROJECT_NAME}-lib ${SRC_LIST})
 add_executable(${PROJECT_NAME} src/main.cpp)
-target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}-lib)
-target_link_libraries(${PROJECT_NAME} pthread  -fsanitize=thread)
+target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}-lib pthread)
+target_link_libraries(${PROJECT_NAME} pthread)
 
 set(TEST_SRC_LIST
     test/test_main.cpp
