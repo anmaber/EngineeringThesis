@@ -1,0 +1,6 @@
+cat
+dog
+Ania
+Maciek
+ass
+fish

@@ -47,6 +47,7 @@ set (SRC_LIST
     src/philosopher.cpp
     src/conclusion.cpp
     src/book.cpp
+    src/ideas.cpp
     src/main.cpp)
     
 include_directories(src)

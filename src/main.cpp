@@ -4,7 +4,10 @@
 
 #include "philosopher.hpp"
 
-constexpr int numOfPhilosophers = 5;
+namespace
+{
+    constexpr int numOfPhilosophers = 5;
+}
 
 int main()
 {
