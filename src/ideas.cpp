@@ -6,7 +6,7 @@ Ideas::Ideas()
 }
 
 
-std::vector<std::string> Ideas::getIdeas() const
+std::vector<std::string> Ideas::get() const
 {
     return ideas_;
 }

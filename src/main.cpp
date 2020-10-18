@@ -3,6 +3,7 @@
 #include <thread>
 
 #include "philosopher.hpp"
+#include "book.hpp"
 
 namespace
 {
@@ -16,12 +17,13 @@ int main()
     std::vector<std::thread> philosophersThreads;
 
     bool feastHasPlace = false;
+    Book book;
 
     for(int i = 0; i < numOfPhilosophers-1; ++i)
     {
-        philosophers.emplace_back(i, forks.at(i), forks.at(i+1));
+        philosophers.emplace_back(i, forks.at(i), forks.at(i+1), book);
     }
-    philosophers.emplace_back(numOfPhilosophers - 1, forks.at(numOfPhilosophers - 1), forks.at(0));
+    philosophers.emplace_back(numOfPhilosophers - 1, forks.at(numOfPhilosophers - 1), forks.at(0), book);
 
     for(int i = 0; i < numOfPhilosophers; ++i)
     {
@@ -30,7 +32,7 @@ int main()
 
     feastHasPlace = true;
 
-    std::this_thread::sleep_for(std::chrono::seconds(120));
+    std::this_thread::sleep_for(std::chrono::seconds(60));
 
     feastHasPlace = false;
 

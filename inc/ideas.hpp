@@ -17,6 +17,6 @@ private:
     void generateIdeas();
     
 public:
-    std::vector<std::string> getIdeas() const;
+    std::vector<std::string> get() const;
     Ideas();
 };

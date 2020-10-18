@@ -4,7 +4,7 @@
 #include <chrono>
 
 struct Conclusion{
-    std::string philosopher;
+    int philosopher;
     std::string answer;
     int result;
     int period;
