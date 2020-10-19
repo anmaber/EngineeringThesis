@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <atomic>
 
 #include "philosopher.hpp"
 #include "book.hpp"
@@ -17,6 +18,7 @@ int main()
     std::vector<std::thread> philosophersThreads;
 
     bool feastHasPlace = false;
+    std::atomic<int> everyoneIsReady = numOfPhilosophers;
     Book book;
 
     for(int i = 0; i < numOfPhilosophers-1; ++i)
@@ -27,7 +29,7 @@ int main()
 
     for(int i = 0; i < numOfPhilosophers; ++i)
     {
-        philosophersThreads.emplace_back(std::thread(&Philosopher::dine, &philosophers.at(i), std::ref(feastHasPlace)));
+        philosophersThreads.emplace_back(std::thread(&Philosopher::dine, &philosophers.at(i), std::ref(feastHasPlace),std::ref(everyoneIsReady)));
     }
 
     feastHasPlace = true;

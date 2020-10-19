@@ -2,6 +2,7 @@
 #include "philosopher.hpp"
 #include <thread>
 #include <functional>
+#include <algorithm>
 
 std::mutex coutMutex;
 
@@ -18,7 +19,7 @@ void Philosopher::eat()
     }
 }
 
-void Philosopher::think()
+void Philosopher::think(std::atomic<int>& everyoneIsReady)
 {
     if(!isHungry_)
     {
@@ -39,6 +40,12 @@ void Philosopher::think()
             print("stopped thinking");
             isHungry_ = true;
         }
+        if(processedIdeasCounter == 10)
+        {
+            chooseSolution();
+            readyToGiveSolution = true;
+            everyoneIsReady--;
+        }
     }
 
 }
@@ -52,23 +59,32 @@ Philosopher::Philosopher(int id, Fork& leftFork, Fork& rightFork, Book& book) :
     lastMeal_ = std::chrono::steady_clock::now();
 }
 
-void Philosopher::dine(bool& feastHasPlace)
+void Philosopher::dine(bool& feastHasPlace, std::atomic<int>& everyoneIsReady)
 {
     while(!feastHasPlace);
     lastMeal_ = std::chrono::steady_clock::now();
-    while(feastHasPlace)
+    while(feastHasPlace || everyoneIsReady.load() != 0)
     {
-        if(isAlive())
+        if(isAlive() && !readyToGiveSolution)
         {
-            think();
+            think(everyoneIsReady);
             eat();
         }
-        else
+        if(!isAlive())
         {
             print("DIED");
             return;
         }        
     }
+    if(readyToGiveSolution)
+    {
+        print(giveSolution());
+    }
+    else
+    {
+        print("fest was too short for me to give you solution");
+    }
+    
 }
 
 void Philosopher::print(const std::string& what) const
@@ -126,5 +142,30 @@ void Philosopher::writeConclusionToBook(int id,const std::string& answer, int re
     book_.conclusions_.push_back({id, answer, result, period});
 }
 
-//TO DO: implementacja getInspirationFromBook(), writeConclusionToBook()
-//po przemyśleniu wszystkich pomysłów przez wszytkich filozofów uczta też sie kończy a na koniec wybieraja ze ksiegi to co najbardziej lubio
+void Philosopher::chooseSolution()
+{
+    std::shared_lock<std::shared_mutex> lock(book_.bookMutex_);
+    std::vector<Conclusion> conclusions;
+    std::copy_if(book_.conclusions_.begin(),book_.conclusions_.end(),
+                std::back_inserter(conclusions), [id=id_](const auto& conclusion){return conclusion.philosopher == id;});
+    lock.unlock();
+    std::vector<int> results;
+    std::transform(conclusions.begin(),conclusions.end(),std::back_inserter(results),
+                    [](const auto& conclusion)->int{return conclusion.result*conclusion.period;});
+    auto bestResult = std::max_element(results.begin(), results.end());
+    int index = std::distance(results.begin(), bestResult);
+    Conclusion bestConclusion = conclusions.at(index);
+
+    std::lock_guard<std::shared_mutex> exclusiveLock(book_.bookMutex_);
+    auto iter = std::find_if(book_.conclusions_.begin(),book_.conclusions_.end(),
+                                [best=bestConclusion](auto& conclusion)mutable{return best == conclusion;});
+    iter->chosen = true;
+}
+
+std::string Philosopher::giveSolution()
+{
+    std::shared_lock<std::shared_mutex> lock(book_.bookMutex_);
+    auto iter = std::find_if(book_.conclusions_.begin(),book_.conclusions_.end(),
+                                [id = id_](auto& conclusion)mutable{return conclusion.philosopher == id && conclusion.chosen == true;});
+    return "My solution is: " + iter->answer;
+}
